@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kuis Interaktif IPS</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+  /* Background with animated gradient */
+  body {
+    margin: 0;
+    height: 100vh;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(270deg, #ff6a00, #ee0979, #ff6a00);
+    background-size: 600% 600%;
+    animation: gradientBG 20s ease infinite;
+    color: #fff;
+    overflow-x: hidden;
+  }
+  @keyframes gradientBG {
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+  }
+  .container {
+    background: rgba(0,0,0,0.5);
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    padding: 30px 40px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+    text-align: center;
+    margin: 30px auto;
+    position: relative;
+    z-index: 10;
+  }
+  h1 {
+    margin-bottom: 20px;
+    font-weight: 700;
+    font-size: 2.5rem;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 6px rgba(0,0,0,0.5);
+  }
+  .question {
+    font-size: 1.3rem;
+    margin-bottom: 25px;
+  }
+  .options {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .option {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    margin: 10px 0;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease;
+    user-select: none;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+  }
+  .option:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+  .option.correct {
+    background: #28a745;
+    box-shadow: 0 0 10px #28a745;
+    cursor: default;
+  }
+  .option.wrong {
+    background: #dc3545;
+    box-shadow: 0 0 10px #dc3545;
+    cursor: default;
+  }
+  .feedback {
+    margin-top: 25px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    min-height: 36px;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+  }
+  button#nextBtn,
+  button#startBtn,
+  button#restartBtn {
+    margin-top: 30px;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    background: #ff9800;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 8px 15px rgba(255,152,0,0.4);
+    transition: background-color 0.3s ease;
+  }
+  button#nextBtn:hover,
+  button#startBtn:hover,
+  button#restartBtn:hover {
+    background: #e67e00;
+  }
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right:0;
+    bottom: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    z-index: 100;
+    padding: 20px;
+    text-align: center;
+  }
+  .hidden {
+    display: none !important;
+  }
+  .score {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.6);
+  }
+  @media (max-width: 480px) {
+    h1 {
+      font-size: 2rem;
+    }
+    .question {
+      font-size: 1.1rem;
+    }
+    .option {
+      font-size: 1rem;
+      padding: 10px 16px;
+    }
+    .score {
+      font-size: 1.6rem;
+    }
+    button#startBtn,
+    button#nextBtn,
+    button#restartBtn {
+      font-size: 1rem;
+      padding: 10px 20px;
+    }
+  }
+</style>
+</head>
+<body>
+  <!-- Opening screen -->
+  <div id="opening" class="overlay" role="dialog" aria-modal="true" aria-labelledby="opening-title" aria-describedby="opening-desc">
+    <h1 id="opening-title">Selamat Datang di Kuis Interaktif!</h1>
+    <p id="opening-desc" style="font-size:1.2rem; max-width:340px; margin: 0 auto 20px;">
+      Uji pengetahuanmu dengan kuis singkat ini. Pilih jawaban yang benar dan dapatkan skor terbaikmu!
+    </p>
+    <button id="startBtn" aria-label="Mulai kuis">Mulai Kuis</button>
+  </div>
+
+  <!-- Quiz container -->
+  <main id="quiz-container" class="container hidden" role="main" aria-labelledby="judul" tabindex="-1">
+    <h1 id="judul">Kuis Interaktif</h1>
+    <div class="question" id="pertanyaan" aria-live="polite" aria-atomic="true">Memuat pertanyaan...</div>
+    <ul class="options" id="jawaban-lista" role="list">
+      <!-- Pilihan jawaban akan dihasilkan disini -->
+    </ul>
+    <div class="feedback" id="umpan-balik" aria-live="polite" aria-atomic="true"></div>
+    <button id="nextBtn" hidden aria-label="Lanjutkan ke pertanyaan berikutnya">Lanjutkan</button>
+  </main>
+
+  <!-- Closing screen -->
+  <div id="closing" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="closing-title" aria-describedby="closing-desc">
+    <h1 id="closing-title">Kuis Selesai!</h1>
+    <p id="closing-desc" class="score" tabindex="0">Skormu: 0 dari 0</p>
+    <p>Terima kasih telah mengikuti kuis ini. Semoga kamu makin pintar!</p>
+    <button id="restartBtn" aria-label="Mulai ulang kuis">Mulai Ulang Kuis</button>
+  </div>
+
+  <!-- Audio elements for sound effects -->
+  <audio id="correctSound" src="audio/benar.mp4" preload="auto"></audio>
+  <audio id="wrongSound" src="audio/salah.mp4" preload="auto"></audio>
+  <audio id="akhir" src="audio/selesai.mp4" preload="auto"></audio>
+
+<script>
+  const kuis = [
+    {
+      pertanyaan: "Apa arti dari istilah (Perang Sabil)?",
+      pilihan: ["Perang untuk mencari kekuasaan", "Perang yang dilakukan di jalan raya", "Perang di jalan Allah (fi sabilillah)", "Perang antar suku di Aceh"],
+      jawabanBenar: 2
+    },
+    {
+      pertanyaan: "Apa yang menjadi latar belakang utama terjadinya Perang Sabil di Aceh?",
+      pilihan: ["Perebutan wilayah antara kerajaan", "Penjajahan Belanda yang mengganggu agama dan kedaulatan Aceh", "Perbedaan ideologi antar tokoh Aceh", "Kebutuhan ekonomi masyarakat Aceh"],
+      jawabanBenar: 1
+    },
+    {
+      pertanyaan: "Siapa tokoh utama perempuan dalam Perang Sabil di Aceh?",
+      pilihan: ["RA Kartini", "Dewi Sartika", "Cut Nyak Dhien", "Nyi Ageng Serang"],
+      jawabanBenar: 2
+    },
+    {
+      pertanyaan: "Apa yang dimaksud dengan jihad fi sabilillah?",
+      pilihan: ["Perang untuk balas dendam", "Perjuangan membela harta benda", "Perjuangan menegakkan kebenaran karena Allah", "Perebutan kekuasaan antar suku"],
+      jawabanBenar: 2
+    },
+    {
+      pertanyaan: "Perang Sabil dianggap sebagai kewajiban agama, yaitu...?",
+      pilihan: ["Fardu kifayah", "Fardu 'ain", "Sunnah muakkad", "Mubah"],
+      jawabanBenar: 1
+    },
+    {
+      pertanyaan: "Tokoh dari Jawa yang juga dikenal dalam konteks jihad melawan penjajah adalah...?",
+      pilihan: ["Teuku Umar", "KH. Ahmad Dahlan", "Pangeran Diponegoro", "KH. Zainal Mustafa"],
+      jawabanBenar: 2
+    },
+    {
+      pertanyaan: "Apa saja nilai utama dalam Perang Sabil?",
+      pilihan: ["Harta, kekuasaan, dan popularitas", "Tauhid, kemerdekaan, keberanian, dan pengorbanan", "Strategi, militer, dan kekuasaan", "Ilmu, ekonomi, dan politik"],
+      jawabanBenar: 1
+    },
+    {
+      pertanyaan: "Apa relevansi Perang Sabil di masa kini?",
+      pilihan: ["Perang terhadap bangsa asing", "Perjuangan melawan kemiskinan dan ketidakadilan", "Peningkatan ekspor senjata", "Dominasi kekuatan politik"],
+      jawabanBenar: 1
+    },
+    {
+      pertanyaan: "Siapa tokoh pejuang yang dikenal bersama suaminya, Teuku Umar?",
+      pilihan: ["Kartini", "Dewi Sartika", "Cut Nyak Dhien", "Tjut Mutia"],
+      jawabanBenar: 2
+    },
+    {
+      pertanyaan: "Mengapa ulama menggerakkan masyarakat untuk berjihad saat itu?",
+      pilihan: ["Karena ingin memperluas kerajaan", "Karena ingin melawan penjajahan yang mengganggu agama", "Karena ingin membentuk partai politik", "Karena ingin mendapat dukungan dari luar negeri"],
+      jawabanBenar: 1
+    }
+  ];
+
+  let indeksPertanyaan = 0;
+  let skor = 0;
+
+  // Elements
+  const opening = document.getElementById('opening');
+  const startBtn = document.getElementById('startBtn');
+  const quizContainer = document.getElementById('quiz-container');
+  const pertanyaanEl = document.getElementById('pertanyaan');
+  const jawabanListEl = document.getElementById('jawaban-lista');
+  const umpanBalikEl = document.getElementById('umpan-balik');
+  const nextBtn = document.getElementById('nextBtn');
+  const closing = document.getElementById('closing');
+  const scoreEl = document.getElementById('closing-desc');
+  const restartBtn = document.getElementById('restartBtn');
+  const correctSound = document.getElementById('correctSound');
+  const wrongSound = document.getElementById('wrongSound');
+
+  // Initialize quiz hidden
+  quizContainer.classList.add('hidden');
+  closing.classList.add('hidden');
+
+  function mulaiKuis() {
+    indeksPertanyaan = 0;
+    skor = 0;
+    opening.classList.add('hidden');
+    closing.classList.add('hidden');
+    quizContainer.classList.remove('hidden');
+    pertanyaanEl.focus();
+    tampilkanPertanyaan();
+  }
+
+  function tampilkanPertanyaan() {
+    umpanBalikEl.textContent = '';
+    nextBtn.hidden = true;
+    pertanyaanEl.textContent = kuis[indeksPertanyaan].pertanyaan;
+    jawabanListEl.innerHTML = '';
+    pertanyaanEl.setAttribute('tabindex', '-1');
+    pertanyaanEl.focus();
+
+    kuis[indeksPertanyaan].pilihan.forEach((pilihan, index) => {
+      const li = document.createElement('li');
+      li.textContent = pilihan;
+      li.classList.add('option');
+      li.setAttribute('tabindex', '0');
+      li.setAttribute('role', 'button');
+      li.setAttribute('aria-pressed', 'false');
+      li.addEventListener('click', () => pilihJawaban(index, li));
+      li.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          pilihJawaban(index, li);
+        }
+      });
+      jawabanListEl.appendChild(li);
+    });
+  }
+
+  function pilihJawaban(pilihanIndex, elemen) {
+    // Disable all options after choosing
+    const semuaPilihan = jawabanListEl.querySelectorAll('.option');
+    semuaPilihan.forEach(opt => {
+      opt.style.cursor = 'default';
+      opt.setAttribute('aria-disabled', 'true');
+      opt.removeEventListener('click', () => {});
+      opt.removeEventListener('keydown', () => {});
+    });
+
+    const benarIndex = kuis[indeksPertanyaan].jawabanBenar;
+
+    if (pilihanIndex === benarIndex) {
+      elemen.classList.add('correct');
+      umpanBalikEl.textContent = "Jawaban Anda benar! 🎉";
+      skor++;
+      playSound(correctSound);
+    } else {
+      elemen.classList.add('wrong');
+      // Highlight correct answer
+      semuaPilihan[benarIndex].classList.add('correct');
+      umpanBalikEl.textContent = "Sayang sekali, jawaban Anda salah.";
+      playSound(wrongSound);
+    }
+    nextBtn.hidden = false;
+    nextBtn.focus();
+  }
+
+  nextBtn.addEventListener('click', () => {
+    indeksPertanyaan++;
+    if (indeksPertanyaan < kuis.length) {
+      tampilkanPertanyaan();
+    } else {
+      tampilkanHasilAkhir();
+    }
+  });
+
+  restartBtn.addEventListener('click', () => {
+    mulaiKuis();
+  });
+
+  startBtn.addEventListener('click', () => {
+    mulaiKuis();
+  });
+
+  function tampilkanHasilAkhir() {
+    playSound(akhir);
+    quizContainer.classList.add('hidden');
+    closing.classList.remove('hidden');
+    scoreEl.textContent = `Skormu: ${skor} dari ${kuis.length}`;
+    restartBtn.focus();
+  }
+
+  function playSound(audioElement) {
+    if (!audioElement) return;
+    audioElement.currentTime = 0;
+    audioElement.play().catch(() => {
+      // ignore play errors on browsers that restrict autoplay
+    });
+  }
+
+</script>
+</body>
+</html>
+

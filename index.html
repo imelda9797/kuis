@@ -46,6 +46,13 @@
   .question {
     font-size: 1.3rem;
     margin-bottom: 25px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  .question.show {
+    opacity: 1;
+    transform: translateY(0);
   }
   .options {
     list-style: none;
@@ -62,6 +69,13 @@
     transition: background-color 0.3s ease;
     user-select: none;
     box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  .option.show {
+    opacity: 1;
+    transform: translateY(0);
   }
   .option:hover {
     background: rgba(255, 255, 255, 0.25);
@@ -96,12 +110,13 @@
     color: #fff;
     cursor: pointer;
     box-shadow: 0 8px 15px rgba(255,152,0,0.4);
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease;
   }
   button#nextBtn:hover,
   button#startBtn:hover,
   button#restartBtn:hover {
     background: #e67e00;
+    transform: scale(1.05);
   }
   .overlay {
     position: fixed;
@@ -127,6 +142,18 @@
     font-weight: 700;
     margin-bottom: 15px;
     text-shadow: 2px 2px 6px rgba(0,0,0,0.6);
+  }
+  .progress-bar {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    height: 10px;
+    margin-top: 20px;
+  }
+  .progress {
+    height: 100%;
+    background: #ff9800;
+    border-radius: 10px;
   }
   @media (max-width: 480px) {
     h1 {
@@ -169,6 +196,9 @@
       <!-- Pilihan jawaban akan dihasilkan disini -->
     </ul>
     <div class="feedback" id="umpan-balik" aria-live="polite" aria-atomic="true"></div>
+    <div class="progress-bar">
+      <div class="progress" style="width: 0%;"></div>
+    </div>
     <button id="nextBtn" hidden aria-label="Lanjutkan ke pertanyaan berikutnya">Lanjutkan</button>
   </main>
 
@@ -255,6 +285,7 @@
   const restartBtn = document.getElementById('restartBtn');
   const correctSound = document.getElementById('correctSound');
   const wrongSound = document.getElementById('wrongSound');
+  const progressBar = document.querySelector('.progress');
 
   // Initialize quiz hidden
   quizContainer.classList.add('hidden');
@@ -277,6 +308,7 @@
     jawabanListEl.innerHTML = '';
     pertanyaanEl.setAttribute('tabindex', '-1');
     pertanyaanEl.focus();
+    pertanyaanEl.classList.add('show');
 
     kuis[indeksPertanyaan].pilihan.forEach((pilihan, index) => {
       const li = document.createElement('li');
@@ -293,7 +325,10 @@
         }
       });
       jawabanListEl.appendChild(li);
+      li.classList.add('show'); // Show option with animation
     });
+
+    updateProgress();
   }
 
   function pilihJawaban(pilihanIndex, elemen) {
@@ -349,6 +384,11 @@
     restartBtn.focus();
   }
 
+  function updateProgress() {
+    const progress = (indeksPertanyaan / kuis.length) * 100;
+    progressBar.style.width = `${progress}%`;
+  }
+
   function playSound(audioElement) {
     if (!audioElement) return;
     audioElement.currentTime = 0;
@@ -360,4 +400,3 @@
 </script>
 </body>
 </html>
-
